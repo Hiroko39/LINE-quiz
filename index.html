@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>気づいていない自分の資産 発見診断</title>
+<style>
+  :root{
+    --line-green: #06C755;
+    --line-green-dark: #05a648;
+    --bg-chat: #e8f5ec;
+    --bubble-bot: #ffffff;
+    --bubble-user: #a6f0b6;
+    --text-main: #333333;
+    --text-sub: #7a7a7a;
+    --shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    background: #cfe9d6;
+    color: var(--text-main);
+  }
+  body{
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .phone {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: var(--bg-chat);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 0 24px rgba(0,0,0,0.15);
+  }
+  header {
+    background: var(--line-green);
+    color: #fff;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.02em;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .progress-wrap {
+    background: #ffffffcc;
+    padding: 8px 16px;
+    position: sticky;
+    top: 48px;
+    z-index: 9;
+    display: none;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 4px;
+    text-align: right;
+  }
+  .progress-bar-bg {
+    background: #dcefe0;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: var(--line-green);
+    height: 100%;
+    width: 0%;
+    border-radius: 8px;
+    transition: width 0.35s ease;
+  }
+  .chat-log {
+    flex: 1;
+    padding: 16px 12px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+  .row {
+    display: flex;
+    width: 100%;
+  }
+  .row.bot { justify-content: flex-start; }
+  .row.user { justify-content: flex-end; }
+
+  .bubble {
+    max-width: 78%;
+    padding: 12px 14px;
+    border-radius: 18px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    box-shadow: var(--shadow);
+    animation: pop-in 0.28s ease;
+  }
+  .bubble.bot {
+    background: var(--bubble-bot);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.user {
+    background: var(--bubble-user);
+    border-bottom-right-radius: 4px;
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+    animation: pop-in 0.32s ease;
+  }
+  .opt-btn {
+    background: #ffffff;
+    border: 1.5px solid var(--line-green);
+    color: var(--line-green-dark);
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .opt-btn:active {
+    background: #eafcef;
+    transform: scale(0.98);
+  }
+  .opt-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: var(--line-green);
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    padding: 14px 22px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: background 0.15s ease, transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cta-btn:active {
+    background: var(--line-green-dark);
+    transform: scale(0.98);
+  }
+
+  .center-block {
+    display: flex;
+    justify-content: center;
+    margin-top: 6px;
+    animation: pop-in 0.32s ease;
+  }
+
+  .result-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    animation: pop-in 0.3s ease;
+  }
+  .result-emoji { font-size: 42px; line-height: 1; margin-bottom: 8px; }
+  .result-title {
+    font-size: 19px;
+    font-weight: bold;
+    color: var(--line-green-dark);
+    margin-bottom: 10px;
+  }
+  .result-body {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--text-main);
+    text-align: left;
+  }
+
+  .chat-log::-webkit-scrollbar { width: 6px; }
+  .chat-log::-webkit-scrollbar-thumb { background: #b7ddc2; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <header>気づいていない自分の資産 発見診断</header>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label" id="progressLabel">1/5</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===========================================================
+     データ定義（文言修正はここだけ触ればOK）
+  =========================================================== */
+
+  const START_TEXT =
+    "🎁1分でわかる「気づいていない自分の資産」発見診断🎁\n" +
+    "全5問、直感で答えてね！\n" +
+    "あなたの中に眠っている\"資産\"が見えてきます✨";
+
+  const START_BUTTON_LABEL = "はじめる";
+
+  const QUESTIONS = [
+    {
+      id: "Q1",
+      question: "急に予定が空いて自由な時間ができたら、あなたはどうする？",
+      options: [
+        { label: "とりあえず何かに使いたくてソワソワする", type: "time" },
+        { label: "前から気になってたことを調べたり学んだりしたくなる", type: "experience" },
+        { label: "誰かと喋りたくなる", type: "network" },
+        { label: "好きなことについて調べたくなる", type: "interest" },
+        { label: "誰かの役に立つことをしたくなる", type: "strength" }
+      ]
+    },
+    {
+      id: "Q2",
+      question: "友達から相談を持ちかけられたら、あなたのスタンスは？",
+      options: [
+        { label: "まずは最後までじっくり話を聞く", type: "strength" },
+        { label: "自分の経験を踏まえてアドバイスする", type: "experience" },
+        { label: "詳しい人や合いそうな人を紹介する", type: "network" },
+        { label: "一緒に楽しめる方法を考える", type: "interest" },
+        { label: "空いてる時間を見つけてすぐ会う約束をする", type: "time" }
+      ]
+    },
+    {
+      id: "Q3",
+      question: "新しいことに挑戦するとしたら、一番気になるのは？",
+      options: [
+        { label: "続けられる時間があるかどうか", type: "time" },
+        { label: "今までの経験が活かせるかどうか", type: "experience" },
+        { label: "一緒にやる仲間がいるかどうか", type: "network" },
+        { label: "心からワクワクできるかどうか", type: "interest" },
+        { label: "誰かの役に立てるかどうか", type: "strength" }
+      ]
+    },
+    {
+      id: "Q4",
+      question: "周りの人からよく言われることは？",
+      options: [
+        { label: "「マイペースだよね」「時間の使い方うまいよね」", type: "time" },
+        { label: "「物知りだね」「頼りになるね」", type: "experience" },
+        { label: "「顔広いね」「紹介うまいね」", type: "network" },
+        { label: "「好きなこととなると熱いよね」", type: "interest" },
+        { label: "「話しやすい」「聞き上手だね」", type: "strength" }
+      ]
+    },
+    {
+      id: "Q5",
+      question: "理想の1日に近いのは？",
+      options: [
+        { label: "スキマ時間にちょっとずつ自分のことができる日", type: "time" },
+        { label: "得意なことで誰かに感謝される日", type: "experience" },
+        { label: "気の合う人とたくさん話せる日", type: "network" },
+        { label: "好きなことに没頭できる日", type: "interest" },
+        { label: "誰かの役に立てたと感じられる日", type: "strength" }
+      ]
+    }
+  ];
+
+  const RESULTS = {
+    time: {
+      title: "スキマ時間活用さん",
+      emoji: "🕐",
+      body: "あなたには、自分でも気づいていない\"使える時間\"が眠っています。その時間を何に使うかで、これからの数年がガラッと変わります。"
+    },
+    experience: {
+      title: "経験の宝庫さん",
+      emoji: "📚",
+      body: "今まで積み上げてきた経験は、あなたが思っている以上に価値があります。それを活かす方法をまだ知らないだけかもしれません。"
+    },
+    network: {
+      title: "つながり上手さん",
+      emoji: "🤝",
+      body: "人との繋がりを大切にできるあなたは、実はとても強い資産を持っています。その繋がりを活かせる場があります。"
+    },
+    interest: {
+      title: "ワクワク発信さん",
+      emoji: "✨",
+      body: "「好き」を語れることは、立派な才能です。その気持ちを仕事に変えている人が、実はたくさんいます。"
+    },
+    strength: {
+      title: "縁の下の力持ちさん",
+      emoji: "🌱",
+      body: "人のために動けるあなたの性格は、多くの人から必要とされる資産です。"
+    }
+  };
+
+  const CLOSING_TEXT =
+    "あなたが気づいていないだけで、もう十分な\"資産\"を持っています。\n" +
+    "それをどう活かせるかは一人ひとり状況が違うので、説明会で詳しくお話ししています。\n" +
+    "気になった方は、下のボタンから気軽にのぞいてみてくださいね♪";
+
+  const CTA_LABEL = "説明会について見てみる";
+
+  /* ===========================================================
+     状態管理
+  =========================================================== */
+
+  let currentQuestionIndex = 0;
+  const answers = []; // { type: string, questionIndex: number } を順番に格納
+
+  const chatLog = document.getElementById("chatLog");
+  const progressWrap = document.getElementById("progressWrap");
+  const progressLabel = document.getElementById("progressLabel");
+  const progressFill = document.getElementById("progressFill");
+
+  /* ===========================================================
+     描画ヘルパー
+  =========================================================== */
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    });
+  }
+
+  function addBotBubble(text) {
+    const row = document.createElement("div");
+    row.className = "row bot";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble bot";
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatLog.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function addUserBubble(text) {
+    const row = document.createElement("div");
+    row.className = "row user";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble user";
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatLog.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function addOptionButtons(options, onSelect) {
+    const wrap = document.createElement("div");
+    wrap.className = "options";
+    const buttons = [];
+
+    options.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn";
+      btn.textContent = opt.label;
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => (b.disabled = true));
+        onSelect(opt);
+      });
+      buttons.push(btn);
+      wrap.appendChild(btn);
+    });
+
+    chatLog.appendChild(wrap);
+    scrollToBottom();
+    return wrap;
+  }
+
+  function addCenterButton(label, onClick) {
+    const wrap = document.createElement("div");
+    wrap.className = "center-block";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cta-btn";
+    btn.textContent = label;
+    btn.addEventListener("click", onClick);
+    wrap.appendChild(btn);
+    chatLog.appendChild(wrap);
+    scrollToBottom();
+    return wrap;
+  }
+
+  function updateProgress(index) {
+    progressWrap.classList.add("show");
+    const current = index + 1;
+    const total = QUESTIONS.length;
+    progressLabel.textContent = current + "/" + total;
+    progressFill.style.width = Math.round((current / total) * 100) + "%";
+  }
+
+  function hideProgress() {
+    progressWrap.classList.remove("show");
+  }
+
+  /* ===========================================================
+     フロー制御
+  =========================================================== */
+
+  function startApp() {
+    addBotBubble(START_TEXT);
+    addCenterButton(START_BUTTON_LABEL, () => {
+      goToQuestion(0);
+    });
+  }
+
+  function goToQuestion(index) {
+    currentQuestionIndex = index;
+    updateProgress(index);
+
+    const q = QUESTIONS[index];
+
+    setTimeout(() => {
+      addBotBubble(q.question);
+      addOptionButtons(q.options, (opt) => {
+        handleAnswer(index, opt);
+      });
+    }, 250);
+  }
+
+  function handleAnswer(questionIndex, opt) {
+    addUserBubble(opt.label);
+    answers.push({ type: opt.type, questionIndex: questionIndex });
+
+    const nextIndex = questionIndex + 1;
+    if (nextIndex < QUESTIONS.length) {
+      goToQuestion(nextIndex);
+    } else {
+      hideProgress();
+      setTimeout(() => {
+        showResult();
+      }, 300);
+    }
+  }
+
+  /* 集計：最多得票のタイプを判定。同点の場合は先に回答されたタイプを優先 */
+  function calculateResultType() {
+    const counts = {};
+    const firstSeenIndex = {};
+
+    answers.forEach((a, i) => {
+      counts[a.type] = (counts[a.type] || 0) + 1;
+      if (!(a.type in firstSeenIndex)) {
+        firstSeenIndex[a.type] = i;
+      }
+    });
+
+    let bestType = null;
+    let bestCount = -1;
+    let bestFirstSeen = Infinity;
+
+    Object.keys(counts).forEach((type) => {
+      const count = counts[type];
+      const firstSeen = firstSeenIndex[type];
+      if (
+        count > bestCount ||
+        (count === bestCount && firstSeen < bestFirstSeen)
+      ) {
+        bestType = type;
+        bestCount = count;
+        bestFirstSeen = firstSeen;
+      }
+    });
+
+    return bestType;
+  }
+
+  function showResult() {
+    const type = calculateResultType();
+    const result = RESULTS[type];
+
+    const row = document.createElement("div");
+    row.className = "row bot";
+    const card = document.createElement("div");
+    card.className = "result-card";
+    card.innerHTML =
+      '<div class="result-emoji">' + result.emoji + "</div>" +
+      '<div class="result-title">' + result.title + "</div>" +
+      '<div class="result-body"></div>';
+    card.querySelector(".result-body").textContent = result.body;
+    row.appendChild(card);
+    chatLog.appendChild(row);
+    scrollToBottom();
+
+    setTimeout(() => {
+      addBotBubble(CLOSING_TEXT);
+      setTimeout(() => {
+        addCenterButton(CTA_LABEL, () => {
+          window.location.href = "#"; // TODO: 説明会申込みリンクに差し替え
+        });
+      }, 250);
+    }, 350);
+  }
+
+  /* ===========================================================
+     起動
+  =========================================================== */
+
+  startApp();
+})();
+</script>
+
+</body>
+</html>
