@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>収入の伸びしろ診断</title>
+<style>
+  :root{
+    --bg:#EFF3EF;
+    --card:#FFFFFF;
+    --bot-bubble:#FFFFFF;
+    --bot-border:#E4E8E4;
+    --user-bubble:#06C755;
+    --user-text:#FFFFFF;
+    --text:#20291F;
+    --text-sub:#6B756A;
+    --accent:#06C755;
+    --accent-dark:#04A648;
+    --track:#DCE4DC;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+  }
+  #app{
+    width:100%;
+    max-width:460px;
+    min-height:100vh;
+    background:var(--card);
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 24px rgba(0,0,0,0.06);
+  }
+  .hidden{display:none !important;}
+
+  /* ---- Start Screen ---- */
+  #start-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:40px 28px;
+    background:linear-gradient(180deg,#F4FBF6 0%,#FFFFFF 60%);
+  }
+  .gift-emoji{font-size:48px;margin-bottom:12px;}
+  #start-screen h1{
+    font-size:22px;
+    line-height:1.6;
+    margin:0 0 16px;
+  }
+  #start-screen p{
+    font-size:15px;
+    line-height:1.9;
+    color:var(--text-sub);
+    margin:0 0 32px;
+    white-space:pre-line;
+  }
+  .primary-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:14px 40px;
+    border-radius:999px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(6,199,85,0.28);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .primary-btn:active{transform:scale(0.97);}
+
+  /* ---- Quiz Screen ---- */
+  #quiz-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .progress-wrap{
+    padding:16px 20px 8px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .progress-track{
+    flex:1;
+    height:6px;
+    background:var(--track);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    border-radius:999px;
+    transition:width .4s ease;
+  }
+  .progress-label{
+    font-size:12px;
+    color:var(--text-sub);
+    min-width:32px;
+    text-align:right;
+  }
+  .chat-log{
+    flex:1;
+    padding:8px 16px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    overflow-y:auto;
+  }
+  .bubble-row{display:flex;}
+  .bubble-row.bot{justify-content:flex-start;}
+  .bubble-row.user{justify-content:flex-end;}
+  .bubble{
+    max-width:78%;
+    padding:12px 16px;
+    border-radius:18px;
+    font-size:15px;
+    line-height:1.7;
+    opacity:0;
+    transform:translateY(8px);
+    animation:fadeUp .35s ease forwards;
+  }
+  .bubble.bot{
+    background:var(--bot-bubble);
+    border:1px solid var(--bot-border);
+    border-bottom-left-radius:4px;
+    color:var(--text);
+  }
+  .bubble.user{
+    background:var(--user-bubble);
+    color:var(--user-text);
+    border-bottom-right-radius:4px;
+  }
+  @keyframes fadeUp{
+    to{opacity:1; transform:translateY(0);}
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:4px;
+    opacity:0;
+    animation:fadeUp .35s ease forwards;
+    animation-delay:.15s;
+  }
+  .option-btn{
+    background:#fff;
+    border:1.5px solid var(--accent);
+    color:var(--accent-dark);
+    padding:12px 16px;
+    border-radius:14px;
+    font-size:14.5px;
+    text-align:left;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .option-btn:hover{background:#F2FBF4;}
+  .option-btn:active{transform:scale(0.98);}
+  .option-btn:disabled{opacity:.5;cursor:default;}
+
+  /* ---- Result Screen ---- */
+  #result-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:36px 26px 40px;
+  }
+  .result-eyebrow{
+    font-size:13px;
+    color:var(--text-sub);
+    letter-spacing:.05em;
+    margin-bottom:8px;
+  }
+  .result-emoji{font-size:54px;margin-bottom:8px;}
+  .result-title{
+    font-size:24px;
+    font-weight:800;
+    margin:0 0 18px;
+  }
+  .result-body{
+    font-size:15px;
+    line-height:1.9;
+    color:var(--text);
+    background:#F4FBF6;
+    border-radius:16px;
+    padding:18px 20px;
+    margin:0 0 24px;
+  }
+  .result-closing{
+    font-size:14px;
+    line-height:1.9;
+    color:var(--text-sub);
+    margin:0 0 28px;
+    white-space:pre-line;
+  }
+  .cta-btn{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    text-decoration:none;
+    padding:15px 36px;
+    border-radius:999px;
+    font-size:15.5px;
+    font-weight:700;
+    box-shadow:0 6px 16px rgba(6,199,85,0.28);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Start Screen -->
+  <div id="start-screen" class="screen">
+    <div class="gift-emoji">🎁</div>
+    <h1>1分でわかる<br>「収入の伸びしろ」発見診断</h1>
+    <p>全5問、直感で答えてね！
+あなたの収入がこれから伸びるカギが、どこにあるか見えてきます✨</p>
+    <button class="primary-btn" id="start-btn">はじめる</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="quiz-screen" class="screen hidden">
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">0/5</div>
+    </div>
+    <div class="chat-log" id="chat-log"></div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen" class="screen hidden">
+    <div class="result-eyebrow">診断結果</div>
+    <div class="result-emoji" id="result-emoji"></div>
+    <h2 class="result-title" id="result-title"></h2>
+    <div class="result-body" id="result-body"></div>
+    <p class="result-closing">あなたの"伸びしろ"がどこにあるか見えてきましたね。
+それを実際にどう伸ばしていくかは一人ひとり状況が違うので、
+説明会で詳しくお話ししています。
+気になった方は、下のボタンから気軽にのぞいてみてくださいね♪</p>
+    <!-- TODO: 説明会申込みリンクに差し替え -->
+    <a href="#" class="cta-btn" id="cta-btn">説明会について見てみる</a>
+  </div>
+
+</div>
+
+<script>
+  const QUESTIONS = [
+    {
+      id: "Q1",
+      question: "収入を増やしたいと思った時、まず何がネックになりますか？",
+      options: [
+        { label: "使える時間が定まらない", type: "time" },
+        { label: "何から始めればいいか情報が足りない", type: "info" },
+        { label: "やってみたい気持ちはあるけど一歩が踏み出せない", type: "action" },
+        { label: "一人で始めるのは不安、頼れる人がいない", type: "environment" },
+        { label: "続けられるか自信がない", type: "consistency" }
+      ]
+    },
+    {
+      id: "Q2",
+      question: "新しいことを始める時、あなたのタイプは？",
+      options: [
+        { label: "スキマ時間を見つけてコツコツ試す", type: "time" },
+        { label: "まずしっかり調べてから動く", type: "info" },
+        { label: "とりあえずやってみるタイプ", type: "action" },
+        { label: "誰かと一緒なら心強い", type: "environment" },
+        { label: "一度始めたら仕組み化して続けたい", type: "consistency" }
+      ]
+    },
+    {
+      id: "Q3",
+      question: "これまで何かへの挑戦を諦めた理由に近いのは？",
+      options: [
+        { label: "忙しくて時間が取れなかった", type: "time" },
+        { label: "情報がなくてやり方がわからなかった", type: "info" },
+        { label: "タイミングを逃して踏み出せなかった", type: "action" },
+        { label: "一人でやるのが心細かった", type: "environment" },
+        { label: "続ける仕組みがなく息切れした", type: "consistency" }
+      ]
+    },
+    {
+      id: "Q4",
+      question: "今のあなたが、一番欲しいものは？",
+      options: [
+        { label: "自由に使える時間", type: "time" },
+        { label: "信頼できる情報", type: "info" },
+        { label: "背中を押してくれるきっかけ", type: "action" },
+        { label: "一緒に頑張れる仲間", type: "environment" },
+        { label: "無理なく続けられる仕組み", type: "consistency" }
+      ]
+    },
+    {
+      id: "Q5",
+      question: "理想の収入の増やし方に近いのは？",
+      options: [
+        { label: "隙間時間を活かして少しずつ", type: "time" },
+        { label: "正しい情報を得て効率よく", type: "info" },
+        { label: "思い立ったらすぐ行動して", type: "action" },
+        { label: "仲間と支え合いながら", type: "environment" },
+        { label: "コツコツ仕組みで自動的に", type: "consistency" }
+      ]
+    }
+  ];
+
+  const RESULTS = {
+    time: {
+      emoji: "🕐",
+      title: "隠れ時間発見さん",
+      body: "あなたの伸びしろは「時間の使い方」にあります。今のスキマ時間をほんの少し工夫するだけで、収入の可能性は大きく広がっていきます。"
+    },
+    info: {
+      emoji: "📖",
+      title: "知れば伸びるさん",
+      body: "あなたの伸びしろは「情報」にあります。正しい情報と出会うだけで、一気に道が開けていくタイプです。"
+    },
+    action: {
+      emoji: "🚀",
+      title: "一歩で変わるさん",
+      body: "あなたの伸びしろは「最初の一歩」にあります。気持ちはもう準備できているので、小さなきっかけがあれば大きく動き出せます。"
+    },
+    environment: {
+      emoji: "🤝",
+      title: "仲間となら伸びるさん",
+      body: "あなたの伸びしろは「一緒にやる環境」にあります。信頼できる仲間やサポートがあれば、しっかり力を発揮できるタイプです。"
+    },
+    consistency: {
+      emoji: "🌱",
+      title: "仕組みで伸びるさん",
+      body: "あなたの伸びしろは「続ける仕組み」にあります。頑張る力はすでにあるので、無理なく続けられる仕組みと出会えば大きく伸びていきます。"
+    }
+  };
+
+  let currentIndex = 0;
+  const counts = {};
+  const firstSeenIndex = {};
+  let answered = false;
+
+  const startScreen = document.getElementById("start-screen");
+  const quizScreen = document.getElementById("quiz-screen");
+  const resultScreen = document.getElementById("result-screen");
+  const chatLog = document.getElementById("chat-log");
+  const progressFill = document.getElementById("progress-fill");
+  const progressLabel = document.getElementById("progress-label");
+
+  document.getElementById("start-btn").addEventListener("click", () => {
+    startScreen.classList.add("hidden");
+    quizScreen.classList.remove("hidden");
+    renderQuestion();
+  });
+
+  function renderQuestion(){
+    answered = false;
+    const q = QUESTIONS[currentIndex];
+    updateProgress();
+
+    const botRow = document.createElement("div");
+    botRow.className = "bubble-row bot";
+    const botBubble = document.createElement("div");
+    botBubble.className = "bubble bot";
+    botBubble.textContent = q.question;
+    botRow.appendChild(botBubble);
+    chatLog.appendChild(botRow);
+
+    const optionsWrap = document.createElement("div");
+    optionsWrap.className = "options";
+    q.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.textContent = opt.label;
+      btn.addEventListener("click", () => selectOption(opt, optionsWrap));
+      optionsWrap.appendChild(btn);
+    });
+    chatLog.appendChild(optionsWrap);
+
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function selectOption(opt, optionsWrap){
+    if(answered) return;
+    answered = true;
+
+    optionsWrap.querySelectorAll(".option-btn").forEach(b => b.disabled = true);
+
+    if(!(opt.type in counts)){
+      counts[opt.type] = 0;
+      firstSeenIndex[opt.type] = currentIndex;
+    }
+    counts[opt.type]++;
+
+    const userRow = document.createElement("div");
+    userRow.className = "bubble-row user";
+    const userBubble = document.createElement("div");
+    userBubble.className = "bubble user";
+    userBubble.textContent = opt.label;
+    userRow.appendChild(userBubble);
+    chatLog.appendChild(userRow);
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    setTimeout(() => {
+      currentIndex++;
+      if(currentIndex < QUESTIONS.length){
+        renderQuestion();
+      } else {
+        updateProgress();
+        setTimeout(showResult, 400);
+      }
+    }, 450);
+  }
+
+  function updateProgress(){
+    const answeredCount = Math.min(currentIndex, QUESTIONS.length);
+    progressFill.style.width = (answeredCount / QUESTIONS.length * 100) + "%";
+    progressLabel.textContent = answeredCount + "/" + QUESTIONS.length;
+  }
+
+  function getWinningType(){
+    let best = null;
+    let bestCount = -1;
+    Object.keys(counts).forEach(type => {
+      const c = counts[type];
+      if(c > bestCount || (c === bestCount && firstSeenIndex[type] < firstSeenIndex[best])){
+        best = type;
+        bestCount = c;
+      }
+    });
+    return best;
+  }
+
+  function showResult(){
+    quizScreen.classList.add("hidden");
+    resultScreen.classList.remove("hidden");
+
+    const type = getWinningType();
+    const r = RESULTS[type];
+    document.getElementById("result-emoji").textContent = r.emoji;
+    document.getElementById("result-title").textContent = r.title;
+    document.getElementById("result-body").textContent = r.body;
+  }
+</script>
+</body>
+</html>
